@@ -1,0 +1,8 @@
+Revision history for Perl extension XML::XMetaL.
+
+0.01  Thu Jan 23 19:42:41 2003
+	- original version; created by h2xs 1.22 with options
+		-XAn XML::XMetaL
+
+0.50  Sun Aug 03 16:45:00 2003
+    - First CPAN release version. Still in alpha state.
