@@ -19,29 +19,48 @@ sub new {
         die "-filter argument is missing, or is not a subclass of XML::XMetaL::Utilities::Filter::Base"
             unless $args{-filter}->isa('XML::XMetaL::Utilities::Filter::Base');
         $self = bless {
-            _current_node => $args{-domnode} || croak("-domnode parameter missing or undefined"),
-            _filter  => $args{-filter},
+            _next_node => $args{-domnode} || croak("-domnode parameter missing or undefined"),
+            _filter    => $args{-filter},
+            _depth     => 0,
         }, ref($class) || $class;
         lock_keys(%$self, keys %$self);
+        my $next_node = $self->_get_next_node();
+        my $filter = $self->_get_filter();
+        unless ($filter->accept($next_node)) {
+            $next_node = $self->_find_next_node($next_node);
+            $self->_set_next_node($next_node);
+        }
     };
     croak $@ if $@;
     return $self;
 }
 
-sub _get_current_node {$_[0]->{_current_node}}
-sub _set_current_node {$_[0]->{_current_node} = $_[1];}
+sub _get_next_node {$_[0]->{_next_node}}
+sub _set_next_node {$_[0]->{_next_node} = $_[1];}
+
 sub _get_filter {$_[0]->{_filter}}
+
+sub _increment_depth {
+    $_[0]->{_depth}++;
+    #print "depth: ".$_[0]->_get_depth()."\n";
+}
+sub _decrement_depth {
+    $_[0]->{_depth}--;
+    #print "depth: ".$_[0]->_get_depth()."\n";
+}
+
+sub _get_depth {$_[0]->{_depth}}
 
 sub has_next {
     my ($self) = @_;
-    return $self->_get_current_node() ? TRUE : FALSE;
+    return $self->_get_next_node() ? TRUE : FALSE;
 }
 
 sub next {
     my ($self) = @_;
-    my $current_node = $self->_get_current_node();
+    my $current_node = $self->_get_next_node();
     my $next_node = $self->_find_next_node($current_node);
-    $self->_set_current_node($next_node);
+    $self->_set_next_node($next_node);
     return $current_node;
 }
 
@@ -50,20 +69,47 @@ sub _find_next_node {
     return undef unless $current_node;
     my $child_nodes;
     my $next_node;
+    my $filter = $self->_get_filter();
+    
     if ($current_node->hasChildNodes()) {
+        $self->_increment_depth();
         $child_nodes = $current_node->{childNodes};
         $next_node = $child_nodes->item(0);
-    } elsif ($current_node->{nextSibling}) {
+        return $next_node if $filter->accept($next_node);
+    } elsif ($self->_get_depth() >= 1 && $current_node->{nextSibling}) {
         $next_node = $current_node->{nextSibling};
-    } else {
-        return undef;
+        return $next_node if $filter->accept($next_node);
+    #} elsif ($self->_get_depth() > 1 && $current_node->{parentNode}->{nextSibling}) {
+    #    $self->_decrement_depth();
+    #    $next_node = $current_node->{parentNode}->{nextSibling};
+    #    return $next_node if $filter->accept($next_node);
+    } elsif ($self->_get_depth() > 1 && $current_node->{parentNode}) {
+        $next_node = $self->_traverse_tree_upwards_recursively($current_node);
+        return $next_node if $filter->accept($next_node);
     }
-    my $filter = $self->_get_filter();
-    if ($filter->accept($next_node)) {
-        return $next_node;
-    } else {
+    
+    if ($next_node) {
         return $self->_find_next_node($next_node);
-    }    
+    } 
+    return undef;
+}
+
+#sub _traverse_tree_downwards {}
+#
+#sub _traverse_tree_sideways {}
+
+sub _traverse_tree_upwards_recursively {
+    my ($self, $current_node) = @_;
+    return undef if $self->_get_depth() < 1;
+    my $parent_node = $current_node->{parentNode};
+    my $sibling_of_parent = $parent_node->{nextSibling};
+    
+    $self->_decrement_depth();
+    if ($sibling_of_parent) {
+        return $sibling_of_parent;
+    } else {
+        return $self->_traverse_tree_upwards_recursively($parent_node);
+    }
 }
 
 1;

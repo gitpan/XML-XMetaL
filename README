@@ -1,6 +1,22 @@
-XML/XMetaL version 0.50
-=======================
+XML::XMetaL version 0.52
+========================
 
+*  XML::XMetaL::Utilities::Iterator fix again. This time it should work!
+
+XML::XMetaL version 0.51
+========================
+
+* Bug fixes in the XML::XMetaL::Utilities::Iterator class
+
+  The iterator could sometimes break off before all nodes were
+  traversed.
+  
+* Added mock DOM classes to emulate XMetaL DOM trees. Useful for debugging
+  the iterator.
+
+
+XML/XMetaL version 0.51
+=======================
 
 XML::XMetaL is a framework for object oriented XMetaL development using Perl.
 The framework makes it easy to write Perl classes that customize XMetaL.

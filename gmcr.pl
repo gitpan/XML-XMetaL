@@ -111,7 +111,7 @@ print <<EOT
                                       -system_identifier  => "$system_identifier",
                                       -handler            => \$handler
             );
-            \$dispatcher->On_Macro_File_Load(\$ActiveDocument);
+            \$dispatcher->On_Macro_File_Load();
         ]]>
     </MACRO>
 EOT

@@ -7,7 +7,7 @@ use Carp;
 use Hash::Util qw(lock_keys);
 
 
-our $VERSION = '0.50';
+our $VERSION = '0.52';
 
 our $singleton;
 our $application;

@@ -45,7 +45,7 @@ sub AUTOLOAD {
     *{$AUTOLOAD} = sub {
         my ($self) = @_;
         my $application = $self->_get_application();
-        $application->Alert("No handler implemented for $method events");
+        $application->SetStatusText("No handler implemented for $method events");
         return $application->{DisplayAlerts};
     };
     $self->$method();
